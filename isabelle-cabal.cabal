@@ -1,0 +1,22 @@
+cabal-version:      3.4
+name:               isabelle-cabal
+version:            0.1.0.0
+synopsis:           Isabelle code generation integration for Cabal
+license:            GPL-3.0-or-later
+license-file:       LICENSE
+author:             Frederik Krogsdal Jacobsen
+maintainer:         fkjac@dtu.dk
+category:           Development
+build-type:         Simple
+                    
+library
+    exposed-modules:  Isabelle.Cabal
+    build-depends:    base ^>=4.17.0.0
+                    , Cabal
+                    , directory
+                    , filepath
+                    , split
+                    , lens
+    hs-source-dirs:   src
+    default-language: GHC2021
+    ghc-options:      -Wall
