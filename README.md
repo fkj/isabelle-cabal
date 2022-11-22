@@ -22,6 +22,7 @@ If someone does forget to call Make instead of Cabal, you may again experience t
 
 The Isabelle Cabal integrates Isabelle exports directly into the Cabal build system.
 It allows you to simply point Cabal at an Isabelle session which it will then compile into a library ready for linking with other code.
+This means that you do not have to have exported Haskell code lying around.
 
 ## How do I use The Isabelle Cabal?
 
@@ -33,17 +34,59 @@ The Isabelle Cabal adds five fields to the library section of your Cabal package
 | `x-isabelle-session` | Yes       | tells Cabal which Isabelle session to export                                                                               | `SESSION`       |
 | `x-isabelle-pattern` | Yes       | tells Cabal which theories from the session to export (if you don't know what to put here, `*:**code**` is a good default) | `-x`            |
 | `x-isabelle-src-dir` | No        | tells Cabal where to look for the ROOT file defining the session                                                           | `-d`            |
-| `x-isabelle-prune`   | No        | tells Cabal how many layers of directories to remove from module names (try 3, but BEWARE if you have overlapping names)   | `-p`            |
+| `x-isabelle-prune`   | No        | tells Cabal how many layers of directories to remove from module names (try `3`, but BEWARE if you have overlapping names)   | `-p`            |
 | `x-isabelle-options` | No        | tells Cabal about any additional options it should pass to the Isabelle system                                             | `-o`            |
 
 See the [Isabelle system manual section 2.5](https://isabelle.in.tum.de/doc/system.pdf#section.2.5) for much more information about each of these options (use the Isabelle option column in the table above to cross-reference).
 
+Once you have filled in these fields, and set up The Isabelle Cabal, you can simply build your package as normal using Cabal.
+When you build your package, The Isabelle Cabal will tell you which modules it has generated from your Isabelle session (or possibly give you an error message).
+You should still use the `exposed-modules` and `other-modules` fields in your package description as usual.
+To make distribution work, you should also:
+ - add any auto-generated modules to the `autogen-modules` field
+ - add your Isabelle theories and ROOT file to the `extra-source-files` field (in the top-level package properties, not in the library section)
+
+To set up The Isabelle Cabal, you will need the `isabelle-cabal` package.
+This package is currently not on Hackage, so you can instead set up your Cabal package to get it from the git distribution by adding a `cabal.project` file containing the following to your package directory:
+```Cabal
+packages: .
+
+source-repository-package
+  type: git
+  location: git@github.com:fkj/isabelle-cabal.git
+```
+
+You can then add a `Setup.hs` file containing the following code to your package directory:
+```Haskell
+import Isabelle.Cabal (isabelleCabalMain)
+
+main :: IO ()
+main = isabelleCabalMain
+```
+and setting the `build-type` field in your package description to `Custom`.
+
+Your `Setup.hs` now depends on the `isabelle-cabal` package, and you need to tell Cabal about this by adding something like the following stanza to your package description:
+```Cabal
+custom-setup
+  setup-depends: base ^>=4.17.0.0
+               , isabelle-cabal ^>=0.1.0.0
+```
+
 ## Limitations
 
-Cabal does not support multi-component builds for custom build types.
+Cabal does not support per-component builds for custom build types.
 For this reason, The Isabelle Cabal cannot support internal libraries.
 In practice, this means that packages built with The Isabelle Cabal can only have a single library.
 If you need to have multiple libraries, you will have to put each Isabelle session in its own package, then build multiple packages at once as a [Cabal project](https://cabal.readthedocs.io/en/stable/cabal-project.html).
+
+Please note that The Isabelle Cabal uses the unstable internal Cabal modules, which means that updates to Cabal may break The Isabelle Cabal at any time.
+
+## How does The Isabelle Cabal work?
+
+The Isabelle Cabal hooks into the build phase of Cabal.
+Before executing the usual Cabal build, The Isabelle Cabal creates a temporary directory in the build directory, then instructs the Isabelle system to export code from the given session into that directory.
+Cabal then builds the package as usual, and the temporary directory is deleted after the build along with the usual temporary files used during a Cabal build.
+The Isabelle Cabal is not that complicated, but it does require some understanding of the internals of Cabal.
 
 ## Acknowledgements
 
