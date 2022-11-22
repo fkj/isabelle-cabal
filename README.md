@@ -1,6 +1,6 @@
 # The Isabelle Cabal
 
-The Isabelle Cabal provides support for automatically building Haskell application which depend on code extracted from Isabelle theories.
+The Isabelle Cabal provides support for automatically building Haskell applications which depend on code extracted from Isabelle theories.
 It is implemented as a custom build type for Cabal, and supports all features of Isabelle export.
 
 Please note that The Isabelle Cabal has seen very limited testing.
